@@ -1,4 +1,6 @@
+import { Color } from "../core/Color";
 import { Size } from "../core/Size";
+import { Renderer } from "../renderer/Renderer";
 import { GameConfig } from "./GameConfig";
 
 export class Game {
@@ -10,8 +12,9 @@ export class Game {
     private imageData: ImageData;
     private colorBuffer: Uint8ClampedArray;
     private depthBuffer: Array<number>;
-
+    private renderer: Renderer;
     private cameraAngle = 0.0;
+    private backgroundColor = new Color(238, 238, 238);
 
     public get domElement(): HTMLCanvasElement {
         return this.canvas;
@@ -34,9 +37,7 @@ export class Game {
         this.imageData = this.context.getImageData(0, 0, this.resolution.width, this.resolution.height);
         this.colorBuffer = this.imageData.data;
         this.depthBuffer = [...new Array(this.resolution.width * this.resolution.height)].map(() => Infinity);
-
-        this.context.fillStyle = "#EEE";
-        this.context.fillRect(0, 0, this.resolution.width, this.resolution.height);
+        this.renderer = new Renderer(this.context, this.resolution, this.imageData, this.colorBuffer);
     }
 
     public run(): void {
@@ -45,7 +46,11 @@ export class Game {
 
             timeStamp;
 
+            this.renderer.clear(this.backgroundColor);
+
             this.update();
+
+            this.renderer.updateScreen();
 
             requestAnimationFrame(mainLoop);
         };
@@ -55,16 +60,15 @@ export class Game {
 
     private update(): void {
 
-        this.context!.strokeStyle = "#F00";
-        this.context!.lineWidth = 1;
-        this.context!.beginPath()
-        this.context!.moveTo(0, 0);
-        this.context!.lineTo(this.resolution.width, 0);
-        this.context!.lineTo(this.resolution.width, this.resolution.height);
-        this.context!.lineTo(0, this.resolution.height);
-        this.context!.lineTo(0, 0);
-        this.context!.lineTo(this.resolution.width, this.resolution.height);
-        this.context!.stroke();
-        this.context!.closePath();
+        for (let y = 0; y < this.resolution.height; y++) {
+
+            for (let x = 0; x < this.resolution.width; x++) {
+
+                if (x % 2 == 0 && y % 2 == 0) {
+
+                    this.renderer.drawPixel(x, y, Color.RED);
+                }
+            }
+        }
     }
 }
