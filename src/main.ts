@@ -6,6 +6,9 @@ const app = document.querySelector<HTMLDivElement>("#app")!;
 const game = new Game({ 
     viewPort: { width: 800, height: 600},
     resolution: {width: 360, height: 240 },
+    fieldOfView: Math.PI / 3,
 });
 
 app.appendChild(game.domElement);
+
+game.run();
