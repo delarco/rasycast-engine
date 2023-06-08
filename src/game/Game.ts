@@ -1,3 +1,4 @@
+import { Clock } from "../core/Clock";
 import { Color } from "../core/Color";
 import { tileMap } from "../core/Map";
 import { Side } from "../core/Side";
@@ -21,6 +22,7 @@ export class Game {
     private cameraAngle = 0.0;
     private cameraPos = new Vec2D(6, 7);
     private backgroundColor = new Color(238, 238, 238);
+    private clock = new Clock();
 
     public get domElement(): HTMLCanvasElement {
         return this.canvas;
@@ -48,11 +50,12 @@ export class Game {
 
     public run(): void {
 
-        setInterval(() => this.cameraAngle += 0.03, 100);
+        setInterval(() => this.cameraAngle += 0.01, 10);
 
         const mainLoop = (timeStamp: number) => {
 
-            timeStamp;
+            this.clock.tick(timeStamp);
+            document.title = this.clock.fps.toString();
 
             this.renderer.clear(this.backgroundColor);
 
@@ -283,6 +286,4 @@ export class Game {
 
         return hit;
     }
-
-
 }
