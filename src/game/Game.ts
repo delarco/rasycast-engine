@@ -3,9 +3,11 @@ import { Color } from "../core/Color";
 import { Map } from "../core/Map";
 import { Side } from "../core/Side";
 import { Size } from "../core/Size";
+import { Texture } from "../core/Texture";
 import { TileHit } from "../core/TileHit";
 import { Vec2D } from "../core/Vec2D";
 import { Renderer } from "../renderer/Renderer";
+import { TextureUtils } from "../utils/Texture.utils";
 import { VectorUtils } from "../utils/Vector.utils";
 import { GameConfig } from "./GameConfig";
 
@@ -24,6 +26,9 @@ export class Game {
     private backgroundColor = new Color(238, 238, 238);
     private clock = new Clock();
     private map: Map;
+    private sprite: Texture | null = null;
+    private spritePosition = new Vec2D(1, 1);
+    private spriteSize = new Size(0.2, 0.2);
 
     public get domElement(): HTMLCanvasElement {
         return this.canvas;
@@ -54,6 +59,7 @@ export class Game {
     public async run(): Promise<void> {
 
         await this.map.load();
+        this.sprite = await TextureUtils.loadTexture('sprites/key.png');
 
         setInterval(() => this.cameraAngle += 0.01, 50);
 
@@ -76,6 +82,12 @@ export class Game {
 
     private update(): void {
 
+        this.drawMap();
+        this.drawSprite();
+    }
+
+    private drawMap(): void {
+
         for (let x = 0; x < this.resolution.width; x++) {
 
             const rayAngle = (this.cameraAngle - (this.config.fieldOfView / 2.0)) + (x / this.resolution.width) * this.config.fieldOfView;
@@ -87,21 +99,15 @@ export class Game {
 
             if (hit) {
 
-                // It has hit something, so extract information to draw column
                 const ray = VectorUtils.sub(hit.position, this.cameraPos);
-
-                // Length of ray is vital for pseudo-depth, but we'll also cosine correct to remove fisheye
                 rayLength = ray.mag() * Math.cos(rayAngle - this.cameraAngle);
-
             }
 
-            // Calculate locations in column that divides ceiling, wall and floor
             const fCeiling = (this.resolution.height / 2.0) - (this.resolution.height / rayLength);
             const fFloor = this.resolution.height - fCeiling;
             const fWallHeight = fFloor - fCeiling;
             const fFloorHeight = this.resolution.height - fFloor;
 
-            // Now draw the column from top to bottom
             for (let y = 0; y < this.resolution.height; y++) {
 
                 if (y <= Math.trunc(fCeiling)) {
@@ -117,6 +123,61 @@ export class Game {
                 else {
 
                     this.renderer.drawPixel(x, y, new Color(200, 150, 150));
+                }
+            }
+
+
+        }
+    }
+
+    private drawSprite(): void {
+
+        const object: Vec2D = VectorUtils.sub(this.spritePosition, this.cameraPos);
+        const distanceToObject = object.mag();
+
+        let objectAngle = Math.atan2(object.y, object.x) - this.cameraAngle;
+        if (objectAngle < -3.14159) objectAngle += 2.0 * 3.14159;
+        if (objectAngle > 3.14159) objectAngle -= 2.0 * 3.14159;
+
+        const inPlayerFOV = Math.abs(objectAngle) < (this.config.fieldOfView + (1.0 / distanceToObject)) / 2.0;
+
+        if (inPlayerFOV && distanceToObject >= 0.5) {
+
+            const floorPoint = new Vec2D(
+                (0.5 * ((objectAngle / (this.config.fieldOfView * 0.5))) + 0.5) * this.resolution.width,
+                (this.resolution.height / 2.0) + (this.resolution.height / distanceToObject) / Math.cos(objectAngle / 2.0)
+            );
+
+            const objectSize = new Size(this.spriteSize.width, this.spriteSize.height);
+
+            objectSize.width *= 2.0 * this.resolution.height;
+            objectSize.height *= 2.0 * this.resolution.height;
+
+            objectSize.width /= distanceToObject;
+            objectSize.height /= distanceToObject;
+
+            const objectTopLeft = new Vec2D(
+                floorPoint.x - objectSize.width / 2.0,
+                floorPoint.y - objectSize.height
+            );
+
+            for (let y = 0; y < objectSize.height; y++) {
+                for (let x = 0; x < objectSize.width; x++) {
+
+                    const sampleX = x / objectSize.width;
+                    const sampleY = y / objectSize.height;
+
+                    const color = this.sprite!.sampleColor(sampleX, sampleY);
+
+                    const screenPos = new Vec2D(
+                        Math.trunc(objectTopLeft.x + x),
+                        Math.trunc(objectTopLeft.y + y)
+                    );
+
+                    if (screenPos.x >= 0 && screenPos.x < this.resolution.width && screenPos.y >= 0 && screenPos.y < this.resolution.height && color.a == 255) {
+
+                        this.renderer.drawPixel(screenPos.x, screenPos.y, color);
+                    }
                 }
             }
         }
