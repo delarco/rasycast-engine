@@ -7,4 +7,5 @@ export interface TileHit {
     tile: Tile;
     side: Side;
     position: Vec2D;
+    tx: number | null;
 }
