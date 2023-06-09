@@ -11,4 +11,14 @@ export class VectorUtils {
 
         return new Vec2D(v1.x - v2.x, v1.y - v2.y);
     }
+
+    public static mul(v: Vec2D, k: number): Vec2D {
+
+        return new Vec2D(v.x * k, v.y * k);
+    }
+
+    public static div(v: Vec2D, k: number): Vec2D {
+
+        return new Vec2D(v.x / k, v.y / k);
+    }
 }
