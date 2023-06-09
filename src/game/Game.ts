@@ -1,6 +1,6 @@
 import { Clock } from "../core/Clock";
 import { Color } from "../core/Color";
-import { tileMap } from "../core/Map";
+import { Map } from "../core/Map";
 import { Side } from "../core/Side";
 import { Size } from "../core/Size";
 import { TileHit } from "../core/TileHit";
@@ -23,6 +23,7 @@ export class Game {
     private cameraPos = new Vec2D(6, 7);
     private backgroundColor = new Color(238, 238, 238);
     private clock = new Clock();
+    private map: Map;
 
     public get domElement(): HTMLCanvasElement {
         return this.canvas;
@@ -46,11 +47,15 @@ export class Game {
         this.colorBuffer = this.imageData.data;
         this.depthBuffer = [...new Array(this.resolution.width * this.resolution.height)].map(() => Infinity);
         this.renderer = new Renderer(this.context, this.resolution, this.imageData, this.colorBuffer);
+
+        this.map = new Map('', new Size(10, 10));
     }
 
-    public run(): void {
+    public async run(): Promise<void> {
 
-        setInterval(() => this.cameraAngle += 0.01, 10);
+        await this.map.load();
+
+        setInterval(() => this.cameraAngle += 0.01, 50);
 
         const mainLoop = (timeStamp: number) => {
 
@@ -98,36 +103,21 @@ export class Game {
 
             // Now draw the column from top to bottom
             for (let y = 0; y < this.resolution.height; y++) {
+
                 if (y <= Math.trunc(fCeiling)) {
 
                     this.renderer.drawPixel(x, y, new Color(200, 200, 255));
                 }
                 else if (y > Math.trunc(fCeiling) && y <= Math.trunc(fFloor)) {
 
-                    switch (hit?.side) {
-                        case Side.NORTH:
-                            this.renderer.drawPixel(x, y, Color.BLUE);
-                            break;
-
-                        case Side.SOUTH:
-                            this.renderer.drawPixel(x, y, Color.ORANGE);
-                            break;
-
-                        case Side.WEST:
-                            this.renderer.drawPixel(x, y, Color.GREEN);
-                            break;
-
-                        case Side.EAST:
-                            this.renderer.drawPixel(x, y, Color.RED);
-                            break;
-                    }
-
+                    let ty = (y - fCeiling) / fWallHeight;
+                    let color = hit!.tile.wall.sampleColor(hit!.tx!, ty);
+                    this.renderer.drawPixel(x, y, color);
                 }
                 else {
 
                     this.renderer.drawPixel(x, y, new Color(200, 150, 150));
                 }
-
             }
         }
 
@@ -135,7 +125,7 @@ export class Game {
 
     private isLocationSolid(x: number, y: number): boolean {
 
-        return tileMap.tiles[y * tileMap.size.width + x].solid;
+        return this.map.tiles[y * this.map.size.width + x].solid;
     }
 
     private castRay(origin: Vec2D, direction: Vec2D): TileHit | null {
@@ -197,9 +187,10 @@ export class Game {
                 tileFound = true;
 
                 hit = {
-                    tile: tileMap.tiles[mapCheck.y * tileMap.size.width + mapCheck.x],
+                    tile: this.map.tiles[mapCheck.y * this.map.size.width + mapCheck.x],
                     side: Side.NONE,
                     position: new Vec2D(),
+                    tx: null,
                 };
 
 
@@ -215,27 +206,26 @@ export class Game {
                         hit.side = Side.WEST;
                         intersection.y = m * (mapCheck.x - origin.x) + origin.y;
                         intersection.x = mapCheck.x;
-                        //hit.fSampleX = vIntersection.y - std::floor(vIntersection.y);
+                        hit.tx = intersection.y - Math.floor(intersection.y);
                     }
                     else if (origin.x >= (mapCheck.x + 1)) {
                         hit.side = Side.EAST;
                         intersection.y = m * ((mapCheck.x + 1) - origin.x) + origin.y;
                         intersection.x = mapCheck.x + 1;
-                        //hit.fSampleX = vIntersection.y - std::floor(vIntersection.y);
+                        hit.tx = intersection.y - Math.floor(intersection.y);
                     }
                     else {
                         hit.side = Side.NORTH;
                         intersection.y = mapCheck.y;
                         intersection.x = (mapCheck.y - origin.y) / m + origin.x;
-                        //hit.fSampleX = intersection.x - std::floor(intersection.x);
+                        hit.tx = intersection.x - Math.floor(intersection.x);
                     }
-
 
                     if (intersection.y < mapCheck.y) {
                         hit.side = Side.NORTH;
                         intersection.y = mapCheck.y;
                         intersection.x = (mapCheck.y - origin.y) / m + origin.x;
-                        //hit.fSampleX = intersection.x - std::floor(intersection.x);
+                        hit.tx = intersection.x - Math.floor(intersection.x);
                     }
                 }
                 else if (origin.y >= mapCheck.y + 1) {
@@ -243,26 +233,26 @@ export class Game {
                         hit.side = Side.WEST;
                         intersection.y = m * (mapCheck.x - origin.x) + origin.y;
                         intersection.x = mapCheck.x;
-                        //hit.fSampleX = intersection.y - std::floor(intersection.y);
+                        hit.tx = intersection.y - Math.floor(intersection.y);
                     }
                     else if (origin.x >= (mapCheck.x + 1)) {
                         hit.side = Side.EAST;
                         intersection.y = m * ((mapCheck.x + 1) - origin.x) + origin.y;
                         intersection.x = mapCheck.x + 1;
-                        //hit.fSampleX = intersection.y - std::floor(intersection.y);
+                        hit.tx = intersection.y - Math.floor(intersection.y);
                     }
                     else {
                         hit.side = Side.SOUTH;
                         intersection.y = mapCheck.y + 1;
                         intersection.x = ((mapCheck.y + 1) - origin.y) / m + origin.x;
-                        //hit.fSampleX = intersection.x - std::floor(intersection.x);
+                        hit.tx = intersection.x - Math.floor(intersection.x);
                     }
 
                     if (intersection.y > (mapCheck.y + 1)) {
                         hit.side = Side.SOUTH;
                         intersection.y = mapCheck.y + 1;
                         intersection.x = ((mapCheck.y + 1) - origin.y) / m + origin.x;
-                        //hit.fSampleX = intersection.x - std::floor(intersection.x);
+                        hit.tx = intersection.x - Math.floor(intersection.x);
                     }
                 }
                 else {
@@ -270,13 +260,13 @@ export class Game {
                         hit.side = Side.WEST;
                         intersection.y = m * (mapCheck.x - origin.x) + origin.y;
                         intersection.x = mapCheck.x;
-                        //hit.fSampleX = intersection.y - std::floor(intersection.y);
+                        hit.tx = intersection.y - Math.floor(intersection.y);
                     }
                     else if (origin.x >= (mapCheck.x + 1)) {
                         hit.side = Side.EAST;
                         intersection.y = m * ((mapCheck.x + 1) - origin.x) + origin.y;
                         intersection.x = mapCheck.x + 1;
-                        //hit.fSampleX = intersection.y - std::floor(intersection.y);
+                        hit.tx = intersection.y - Math.floor(intersection.y);
                     }
                 }
 
