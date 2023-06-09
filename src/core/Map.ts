@@ -1,4 +1,5 @@
 import { TextureUtils } from "../utils/Texture.utils";
+import { Side } from "./Side";
 import { Size } from "./Size";
 import { Tile } from "./Tile";
 import { Vec2D } from "./Vec2D";
@@ -30,6 +31,10 @@ export class Map {
 
         const wall = await TextureUtils.loadTexture('textures/ground-01.png')!;
         const test = await TextureUtils.loadTexture('textures/debug.png')!;
+        const north = await TextureUtils.loadTexture('textures/north.png')!;
+        const south = await TextureUtils.loadTexture('textures/south.png')!;
+        const west = await TextureUtils.loadTexture('textures/west.png')!;
+        const east = await TextureUtils.loadTexture('textures/east.png')!;
 
         for (let y = 0; y < this.size.height; y++) {
             for (let x = 0; x < this.size.width; x++) {
@@ -39,8 +44,26 @@ export class Map {
                 const tile = new Tile(
                     new Vec2D(x, y),
                     num > 0,
-                    num == 1 ? wall : test
                 );
+
+                if (num == 1) {
+                    tile.wall = {
+                        [Side.NORTH]: north,
+                        [Side.SOUTH]: south,
+                        [Side.WEST]: west,
+                        [Side.EAST]: east,
+                    };
+                }
+
+                if(num == 2) {
+                    tile.wall = {
+                        [Side.NORTH]: test,
+                        [Side.SOUTH]: test,
+                        [Side.WEST]: test,
+                        [Side.EAST]: test,
+                    };
+                }
+
                 this.tiles.push(tile);
             }
         }

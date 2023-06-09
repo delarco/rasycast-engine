@@ -111,7 +111,7 @@ export class Game {
                 else if (y > Math.trunc(fCeiling) && y <= Math.trunc(fFloor)) {
 
                     let ty = (y - fCeiling) / fWallHeight;
-                    let color = hit!.tile.wall.sampleColor(hit!.tx!, ty);
+                    let color = hit!.tile.wall![hit!.side!].sampleColor(hit!.tx!, ty);
                     this.renderer.drawPixel(x, y, color);
                 }
                 else {
@@ -188,7 +188,7 @@ export class Game {
 
                 hit = {
                     tile: this.map.tiles[mapCheck.y * this.map.size.width + mapCheck.x],
-                    side: Side.NONE,
+                    side: null,
                     position: new Vec2D(),
                     tx: null,
                 };

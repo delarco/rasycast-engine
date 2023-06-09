@@ -5,7 +5,7 @@ import { Vec2D } from "./Vec2D";
 export interface TileHit {
 
     tile: Tile;
-    side: Side;
+    side: Side | null;
     position: Vec2D;
     tx: number | null;
 }
