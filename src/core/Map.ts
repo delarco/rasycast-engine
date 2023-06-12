@@ -26,12 +26,14 @@ export class Map {
         public name: string,
         public size: Size,
         public tiles: Array<Tile> = [],
-        public skybox: Texture = new Texture('', 1, 1, [Color.BLUE])) { }
+        public skybox: Texture = new Texture('', 1, 1, [new Color(200, 150, 150)]),
+        public defaultFloor: Texture = new Texture('', 1, 1, [new Color(200, 150, 150)])) { }
 
     public async load(): Promise<void> {
 
         this.tiles = new Array<Tile>();
         this.skybox = await TextureUtils.loadTexture('textures/skybox-night.png')!;
+        this.defaultFloor = await TextureUtils.loadTexture('textures/grass-01.png')!;
         
         const ground = await TextureUtils.loadTexture('textures/ground-01.png')!;
         const grass = await TextureUtils.loadTexture('textures/grass-01.png')!;

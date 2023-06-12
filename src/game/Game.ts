@@ -154,9 +154,6 @@ export class Game {
 
     private drawMap(): void {
 
-        const floorColor = new Color(200, 150, 150);
-        const ceilingColor = new Color(200, 200, 255);
-
         for (let x = 0; x < this.resolution.width; x++) {
 
             const rayAngle = (this.cameraAngle - (this.config.fieldOfView / 2.0)) + (x / this.resolution.width) * this.config.fieldOfView;
@@ -197,7 +194,7 @@ export class Game {
                         color = Color.shade(color, this.ambientLight);
                     }
 
-                    if (!color && this.map.skybox) {
+                    if (!color) {
 
                         let tx = rayAngle * (1 / (2 * Math.PI)) % 1;
                         if (tx < 0) tx = 1 + tx;
@@ -205,7 +202,7 @@ export class Game {
                         color = this.map.skybox.sampleColor(tx, ty);
                     }
 
-                    if (!color) color = ceilingColor;
+                    //if (!color) color = ceilingColor;
 
                     this.renderer.drawPixel(x, y, color);
                 }
@@ -236,7 +233,7 @@ export class Game {
                     const tilePos = VectorUtils.int(planePoint);
                     const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
                     const tile = this.map.getTile(tilePos.y, tilePos.x);
-                    let color = floorColor;
+                    let color = this.map.defaultFloor.sampleColor(tex.x, tex.y);
 
                     if (tile?.texture && tile.texture[Side.BOTTOM]) {
 
