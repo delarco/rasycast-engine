@@ -21,4 +21,9 @@ export class VectorUtils {
 
         return new Vec2D(v.x / k, v.y / k);
     }
+
+    public static int(v: Vec2D): Vec2D {
+
+        return new Vec2D(Math.trunc(v.x), Math.trunc(v.y));
+    }
 }
