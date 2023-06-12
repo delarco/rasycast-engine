@@ -3,12 +3,23 @@ import { Size } from "../core/Size";
 
 export class Renderer {
 
+    private context: CanvasRenderingContext2D | null;
+    private imageData: ImageData;
+    private colorBuffer: Uint8ClampedArray;
+    private depthBuffer: Array<number>
+
     constructor(
-        private context: CanvasRenderingContext2D,
-        private resolution: Size,
-        private imageData: ImageData,
-        private colorBuffer: Uint8ClampedArray,
-        private depthBuffer: Array<number>) { }
+        private canvas: HTMLCanvasElement,
+        private resolution: Size) {
+
+            this.context = this.canvas.getContext("2d");
+
+            if (!this.context) throw new Error("Context error.");
+
+            this.imageData = this.context.getImageData(0, 0, this.resolution.width, this.resolution.height);
+            this.colorBuffer = this.imageData.data;
+            this.depthBuffer = [...new Array(this.resolution.width * this.resolution.height)].map(() => Infinity);
+        }
 
     public clear(color: Color): void {
 
@@ -18,8 +29,6 @@ export class Renderer {
         }
 
         for (let index = 0; index < this.colorBuffer.length; index += 4) {
-
-            //this.depthBuffer[index / 4] = Infinity;
 
             this.colorBuffer[index + 0] = color.r;
             this.colorBuffer[index + 1] = color.g;
@@ -69,6 +78,6 @@ export class Renderer {
 
     public updateScreen(): void {
 
-        this.context.putImageData(this.imageData, 0, 0);
+        this.context!.putImageData(this.imageData, 0, 0);
     }
 }
