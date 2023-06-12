@@ -166,9 +166,15 @@ export class Game {
                     const planePoint = VectorUtils.add(this.cameraPos, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - this.cameraAngle)));
                     const tilePos = VectorUtils.int(planePoint);
                     const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
-                    const tile = this.map.tiles[tilePos.y * this.map.size.width + tilePos.x];
-                    const color = tile.texture![Side.TOP]?.sampleColor(tex.x, tex.y);
-                    this.renderer.drawPixel(x, y, color || ceilingColor);
+                    const tile = this.map.getTile(tilePos.y, tilePos.x);
+                    let color = ceilingColor;
+
+                    if(tile?.texture && tile.texture[Side.TOP]) {
+
+                        color = tile.texture[Side.TOP].sampleColor(tex.x, tex.y);
+                    }
+
+                    this.renderer.drawPixel(x, y, color);
                 }
                 else if (y > Math.trunc(fCeiling) && y <= Math.trunc(fFloor)) {
 
@@ -194,9 +200,15 @@ export class Game {
                     const planePoint = VectorUtils.add(this.cameraPos, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - this.cameraAngle)));
                     const tilePos = VectorUtils.int(planePoint);
                     const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
-                    const tile = this.map.tiles[tilePos.y * this.map.size.width + tilePos.x];
-                    const color = tile.texture![Side.BOTTOM]?.sampleColor(tex.x, tex.y);
-                    this.renderer.drawPixel(x, y, color || floorColor);
+                    const tile = this.map.getTile(tilePos.y, tilePos.x);
+                    let color = floorColor;
+
+                    if(tile?.texture && tile.texture[Side.BOTTOM]) {
+
+                        color = tile.texture[Side.BOTTOM].sampleColor(tex.x, tex.y);
+                    }
+
+                    this.renderer.drawPixel(x, y, color);
                 }
             }
 
@@ -259,6 +271,9 @@ export class Game {
     }
 
     private isLocationSolid(x: number, y: number): boolean {
+
+        if (x < 0 || y < 0) return false;
+        if (x >= this.map.size.width || y >= this.map.size.height) return false;
 
         return this.map.tiles[y * this.map.size.width + x].solid;
     }

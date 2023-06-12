@@ -22,6 +22,9 @@ export class Texture {
 
     public sampleColor(x: number, y: number): Color {
 
+        if(x < 0) x = 1 - x;
+        if(y < 0) y = 1 - y;
+
         const sx = Math.min(Math.trunc((x * this.width)), this.width - 1);
 		const sy = Math.min(Math.trunc((y * this.height)), this.height - 1);
 		return this.getPixelColor(sx, sy);

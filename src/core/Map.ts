@@ -6,16 +6,16 @@ import { Vec2D } from "./Vec2D";
 
 // Placeholder map
 const map = [
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    0, 1, 1, 0, 0, 2, 0, 0, 1, 1,
     1, 0, 0, 0, 0, 2, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 2, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 2, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 2, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 2, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
 ]
 
 export class Map {
@@ -70,7 +70,7 @@ export class Map {
                     };
                 }
 
-                if(num == 2) {
+                if (num == 2) {
                     tile.texture = {
                         [Side.NORTH]: test,
                         [Side.SOUTH]: test,
@@ -90,7 +90,7 @@ export class Map {
                     };
                 }
 
-                if(x == 1 && y == 1) {
+                if (x == 1 && y == 1) {
                     tile.texture![Side.TOP] = ground;
                     tile.texture![Side.BOTTOM] = grass;
                 }
@@ -98,8 +98,11 @@ export class Map {
                 this.tiles.push(tile);
             }
         }
+    }
 
-        console.log(this);
-        
+    public getTile(x: number, y: number): Tile | null {
+
+        if (x < 0 || y < 0 || x >= this.size.width || y >= this.size.height) return null;
+        return this.tiles[y * this.size.width + x];
     }
 }
