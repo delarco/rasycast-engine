@@ -156,7 +156,7 @@ export class Game {
 
         let tx = rayAngle * (1 / (2 * Math.PI)) % 1;
         if (tx < 0) tx = 1 + tx;
-        const ty = y / (this.halfResolution.height - 1);
+        const ty = y / (this.resolution.height - 1);
         return this.map.skybox.sampleColor(tx, ty);
     }
 

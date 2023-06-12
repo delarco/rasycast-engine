@@ -8,16 +8,16 @@ import { Vec2D } from "./Vec2D";
 
 // Placeholder map
 const map = [
-    0, 3, 3, 3, 3, 0, 3, 3, 3, 0,
-    3, 0, 0, 0, 0, 2, 0, 0, 0, 3,
-    3, 0, 0, 0, 0, 2, 0, 0, 0, 3,
-    3, 0, 0, 0, 0, 4, 0, 0, 0, 3,
-    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
-    0, 5, 5, 5, 5, 5, 5, 5, 5, 0,
+    0, 5, 6, 6, 6, 0, 6, 6, 5, 0,
+    5, 0, 0, 0, 0, 2, 0, 0, 0, 5,
+    6, 0, 0, 0, 0, 2, 0, 0, 0, 6,
+    6, 0, 0, 0, 0, 4, 0, 0, 0, 6,
+    6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
+    6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
+    6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
+    6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
+    5, 0, 0, 0, 0, 0, 0, 0, 0, 5,
+    0, 5, 6, 6, 6, 6, 6, 6, 5, 0,
 ]
 
 export class Map {
@@ -45,6 +45,7 @@ export class Map {
         const banner = await TextureUtils.loadTexture('textures/banner.png')!;
         const rocks = await TextureUtils.loadTexture('textures/rocks.png')!;
         const window = await TextureUtils.loadTexture('textures/window.png')!;
+        const windowBig = await TextureUtils.loadTexture('textures/window-big.png')!;
 
         for (let y = 0; y < this.size.height; y++) {
             for (let x = 0; x < this.size.width; x++) {
@@ -124,6 +125,17 @@ export class Map {
                         [Side.SOUTH]: window,
                         [Side.WEST]: window,
                         [Side.EAST]: window,
+                        [Side.TOP]: null,
+                        [Side.BOTTOM]: null,
+                    };
+                }
+
+                if (num == 6) {
+                    tile.texture = {
+                        [Side.NORTH]: windowBig,
+                        [Side.SOUTH]: windowBig,
+                        [Side.WEST]: windowBig,
+                        [Side.EAST]: windowBig,
                         [Side.TOP]: null,
                         [Side.BOTTOM]: null,
                     };
