@@ -6,6 +6,7 @@ import { Size } from "../core/Size";
 import { Texture } from "../core/Texture";
 import { TileHit } from "../core/TileHit";
 import { Vec2D } from "../core/Vec2D";
+import { Keyboard, KEYS } from "../input/Keyboard";
 import { Renderer } from "../renderer/Renderer";
 import { TextureUtils } from "../utils/Texture.utils";
 import { VectorUtils } from "../utils/Vector.utils";
@@ -22,13 +23,15 @@ export class Game {
     private depthBuffer: Array<number>;
     private renderer: Renderer;
     private cameraAngle = 0.0;
-    private cameraPos = new Vec2D(6, 7);
+    private cameraPos = new Vec2D(6.5, 7.5);
     private backgroundColor = new Color(238, 238, 238);
     private clock = new Clock();
     private map: Map;
     private sprite: Texture | null = null;
-    private spritePosition = new Vec2D(1, 1);
+    private spritePosition = new Vec2D(1.5, 1.5);
     private spriteSize = new Size(0.2, 0.2);
+    private keyboard = new Keyboard();
+    private cameraVelocity = 2.2;
 
     public get domElement(): HTMLCanvasElement {
         return this.canvas;
@@ -61,8 +64,6 @@ export class Game {
         await this.map.load();
         this.sprite = await TextureUtils.loadTexture('sprites/key.png');
 
-        setInterval(() => this.cameraAngle += 0.01, 50);
-
         const mainLoop = (timeStamp: number) => {
 
             this.clock.tick(timeStamp);
@@ -70,9 +71,7 @@ export class Game {
 
             this.renderer.clear(this.backgroundColor);
 
-            this.update();
-
-            this.renderer.updateScreen();
+            this.update(this.clock.deltaTime);
 
             requestAnimationFrame(mainLoop);
         };
@@ -80,10 +79,40 @@ export class Game {
         requestAnimationFrame(mainLoop);
     }
 
-    private update(): void {
+    private update(deltaTime: number): void {
 
+        this.updateCamera(deltaTime);
         this.drawMap();
         this.drawSprite();
+        this.renderer.updateScreen();
+    }
+
+    private updateCamera(deltaTime: number): void {
+
+        if (this.keyboard.key(KEYS.ARROW_LEFT)) {
+
+            this.cameraAngle -= 2.5 * deltaTime;
+        }
+
+        if (this.keyboard.key(KEYS.ARROW_RIGHT)) {
+
+            this.cameraAngle += 2.5 * deltaTime;
+        }
+
+        const mov = new Vec2D(
+            Math.cos(this.cameraAngle) * this.cameraVelocity * deltaTime,
+            Math.sin(this.cameraAngle) * this.cameraVelocity * deltaTime
+        );
+
+        if (this.keyboard.key(KEYS.ARROW_UP)) {
+
+            this.cameraPos = VectorUtils.add(this.cameraPos, mov);
+        }
+
+        if (this.keyboard.key(KEYS.ARROW_DOWN)) {
+
+            this.cameraPos = VectorUtils.sub(this.cameraPos, mov);
+        }
     }
 
     private drawMap(): void {
@@ -99,7 +128,11 @@ export class Game {
 
             if (hit) {
 
-                const ray = VectorUtils.sub(hit.position, this.cameraPos);
+                const ray = new Vec2D(
+                    hit.position.x - this.cameraPos.x,
+                    hit.position.y - this.cameraPos.y,
+                );
+
                 rayLength = ray.mag() * Math.cos(rayAngle - this.cameraAngle);
             }
 
@@ -198,7 +231,7 @@ export class Game {
             Math.sqrt(1 + (direction.x / direction.y) * (direction.x / direction.y))
         );
 
-        let mapCheck = origin.clone();
+        let mapCheck = VectorUtils.int(origin.clone());
         let sideDistance = new Vec2D();
         let stepDistance = new Vec2D();
 
