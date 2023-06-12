@@ -32,6 +32,8 @@ export class Game {
     private spriteSize = new Size(0.2, 0.2);
     private keyboard = new Keyboard();
     private cameraVelocity = 2.2;
+    private ambientLight = 0.3;
+    private ambientLightVel = 0.005;
 
     public get domElement(): HTMLCanvasElement {
         return this.canvas;
@@ -80,6 +82,13 @@ export class Game {
     }
 
     private update(deltaTime: number): void {
+
+        this.ambientLight += this.ambientLightVel;
+
+        if(this.ambientLight >= 1 || this.ambientLight <= 0.2){
+
+            this.ambientLightVel *= -1;
+        }
 
         this.updateCamera(deltaTime);
         this.drawMap();
@@ -185,6 +194,7 @@ export class Game {
                     if (tile?.texture && tile.texture[Side.TOP]) {
 
                         color = tile.texture[Side.TOP].sampleColor(tex.x, tex.y);
+                        color = Color.shade(color, this.ambientLight);
                     }
 
                     if (!color && this.map.skybox) {
@@ -215,6 +225,8 @@ export class Game {
                         hit!.position.y - this.cameraPos.y,
                     );
 
+                    color = Color.shade(color, this.ambientLight);
+
                     this.renderer.depthDrawPixel(x, y, ray.mag(), color);
                 }
                 else {
@@ -229,6 +241,7 @@ export class Game {
                     if (tile?.texture && tile.texture[Side.BOTTOM]) {
 
                         color = tile.texture[Side.BOTTOM].sampleColor(tex.x, tex.y);
+                        color = Color.shade(color, this.ambientLight);
                     }
 
                     this.renderer.drawPixel(x, y, color);
@@ -276,7 +289,8 @@ export class Game {
                     const sampleX = x / objectSize.width;
                     const sampleY = y / objectSize.height;
 
-                    const color = this.sprite!.sampleColor(sampleX, sampleY);
+                    let color = this.sprite!.sampleColor(sampleX, sampleY);
+                    color = Color.shade(color, this.ambientLight);
 
                     const screenPos = new Vec2D(
                         Math.trunc(objectTopLeft.x + x),

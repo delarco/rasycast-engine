@@ -31,7 +31,7 @@ export class Color {
 
     public static shade(color: Color, shade: number = 0.6): Color {
 
-        return new Color(color.r * shade, color.g * shade, color.b * shade,);
+        return new Color(color.r * shade, color.g * shade, color.b * shade, color.a);
     }
 
     public clone(): Color {
