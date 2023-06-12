@@ -89,12 +89,12 @@ export class Game {
 
     private updateCamera(deltaTime: number): void {
 
-        if (this.keyboard.key(KEYS.ARROW_LEFT)) {
+        if (this.keyboard.key(KEYS.ARROW_LEFT) || this.keyboard.key(KEYS.KEY_Q)) {
 
             this.cameraAngle -= 2.5 * deltaTime;
         }
 
-        if (this.keyboard.key(KEYS.ARROW_RIGHT)) {
+        if (this.keyboard.key(KEYS.ARROW_RIGHT) || this.keyboard.key(KEYS.KEY_E)) {
 
             this.cameraAngle += 2.5 * deltaTime;
         }
@@ -104,14 +104,29 @@ export class Game {
             Math.sin(this.cameraAngle) * this.cameraVelocity * deltaTime
         );
 
-        if (this.keyboard.key(KEYS.ARROW_UP)) {
+        const strafe = new Vec2D(
+            Math.cos(this.cameraAngle + Math.PI / 2) * this.cameraVelocity * deltaTime,
+            Math.sin(this.cameraAngle + Math.PI / 2) * this.cameraVelocity * deltaTime
+        );
+
+        if (this.keyboard.key(KEYS.ARROW_UP) || this.keyboard.key(KEYS.KEY_W)) {
 
             this.cameraPos = VectorUtils.add(this.cameraPos, mov);
         }
 
-        if (this.keyboard.key(KEYS.ARROW_DOWN)) {
+        if (this.keyboard.key(KEYS.ARROW_DOWN) || this.keyboard.key(KEYS.KEY_S)) {
 
             this.cameraPos = VectorUtils.sub(this.cameraPos, mov);
+        }
+
+        if (this.keyboard.key(KEYS.KEY_A)) {
+
+            this.cameraPos = VectorUtils.sub(this.cameraPos, strafe);
+        }
+
+        if (this.keyboard.key(KEYS.KEY_D)) {
+
+            this.cameraPos = VectorUtils.add(this.cameraPos, strafe);
         }
     }
 
@@ -154,7 +169,13 @@ export class Game {
 
                     let ty = (y - fCeiling) / fWallHeight;
                     let color = hit!.tile.wall![hit!.side!].sampleColor(hit!.tx!, ty);
-                    this.renderer.depthDrawPixel(x, y, rayLength, color);
+
+                    const ray = new Vec2D(
+                        hit!.position.x - this.cameraPos.x,
+                        hit!.position.y - this.cameraPos.y,
+                    );
+
+                    this.renderer.depthDrawPixel(x, y, ray.mag(), color);
                 }
                 else {
 
@@ -212,8 +233,7 @@ export class Game {
 
                     if (screenPos.x >= 0 && screenPos.x < this.resolution.width && screenPos.y >= 0 && screenPos.y < this.resolution.height && color.a == 255) {
 
-                        //this.renderer.depthDrawPixel(screenPos.x, screenPos.y, distanceToObject, color);
-                        this.renderer.drawPixel(screenPos.x, screenPos.y, color);
+                        this.renderer.depthDrawPixel(screenPos.x, screenPos.y, distanceToObject, color);
                     }
                 }
             }
