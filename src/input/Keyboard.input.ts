@@ -11,7 +11,7 @@ export enum KEYS {
     KEY_E = 'KeyE',
 }
 
-export class Keyboard {
+export class KeyboardInput {
 
     private keyState: { [key: string]: boolean } = {};
 

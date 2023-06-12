@@ -6,8 +6,9 @@ import { Size } from "../core/Size";
 import { Texture } from "../core/Texture";
 import { TileHit } from "../core/TileHit";
 import { Vec2D } from "../core/Vec2D";
-import { Keyboard, KEYS } from "../input/Keyboard";
 import { Renderer } from "../renderer/Renderer";
+import { MapScene } from "../scene/MapScene";
+import { Scene } from "../scene/Scene";
 import { TextureUtils } from "../utils/Texture.utils";
 import { VectorUtils } from "../utils/Vector.utils";
 import { GameConfig } from "./GameConfig";
@@ -22,17 +23,13 @@ export class Game {
     private colorBuffer: Uint8ClampedArray;
     private depthBuffer: Array<number>;
     private renderer: Renderer;
-    private cameraAngle = 0.0;
-    private cameraPos = new Vec2D(6.5, 7.5);
-    private backgroundColor = new Color(238, 238, 238);
     private clock = new Clock();
     private map: Map;
     private sprite: Texture | null = null;
     private spritePosition = new Vec2D(1.5, 1.5);
     private spriteSize = new Size(0.2, 0.2);
-    private keyboard = new Keyboard();
-    private cameraVelocity = 2.2;
-    private ambientLight = 0.9;
+
+    private scenes: Array<Scene> = [];
 
     public get domElement(): HTMLCanvasElement {
         return this.canvas;
@@ -60,6 +57,11 @@ export class Game {
         this.map = new Map('', new Size(10, 10));
     }
 
+    public addScene(scene: Scene) {
+
+        this.scenes.push(scene);
+    }
+
     public async run(): Promise<void> {
 
         await this.map.load();
@@ -70,65 +72,25 @@ export class Game {
             this.clock.tick(timeStamp);
             document.title = this.clock.fps.toString();
 
-            this.renderer.clear(this.backgroundColor);
+            this.renderer.clear(this.config.backgroundColor);
 
-            this.update(this.clock.deltaTime);
+            for (let scene of this.scenes) {
+
+                scene.update(this.clock.deltaTime);
+                
+                if(scene instanceof MapScene) {
+
+                    this.drawMap(scene);
+                    this.drawSprites(scene);
+                }
+            }
+
+            this.renderer.updateScreen();
 
             requestAnimationFrame(mainLoop);
         };
 
         requestAnimationFrame(mainLoop);
-    }
-
-    private update(deltaTime: number): void {
-
-        this.updateCamera(deltaTime);
-        this.drawMap();
-        this.drawSprite();
-        this.renderer.updateScreen();
-    }
-
-    private updateCamera(deltaTime: number): void {
-
-        if (this.keyboard.key(KEYS.ARROW_LEFT) || this.keyboard.key(KEYS.KEY_Q)) {
-
-            this.cameraAngle -= 2.5 * deltaTime;
-        }
-
-        if (this.keyboard.key(KEYS.ARROW_RIGHT) || this.keyboard.key(KEYS.KEY_E)) {
-
-            this.cameraAngle += 2.5 * deltaTime;
-        }
-
-        const mov = new Vec2D(
-            Math.cos(this.cameraAngle) * this.cameraVelocity * deltaTime,
-            Math.sin(this.cameraAngle) * this.cameraVelocity * deltaTime
-        );
-
-        const strafe = new Vec2D(
-            Math.cos(this.cameraAngle + Math.PI / 2) * this.cameraVelocity * deltaTime,
-            Math.sin(this.cameraAngle + Math.PI / 2) * this.cameraVelocity * deltaTime
-        );
-
-        if (this.keyboard.key(KEYS.ARROW_UP) || this.keyboard.key(KEYS.KEY_W)) {
-
-            this.cameraPos = VectorUtils.add(this.cameraPos, mov);
-        }
-
-        if (this.keyboard.key(KEYS.ARROW_DOWN) || this.keyboard.key(KEYS.KEY_S)) {
-
-            this.cameraPos = VectorUtils.sub(this.cameraPos, mov);
-        }
-
-        if (this.keyboard.key(KEYS.KEY_A)) {
-
-            this.cameraPos = VectorUtils.sub(this.cameraPos, strafe);
-        }
-
-        if (this.keyboard.key(KEYS.KEY_D)) {
-
-            this.cameraPos = VectorUtils.add(this.cameraPos, strafe);
-        }
     }
 
     private getSkyboxColor(rayAngle: number, y: number): Color {
@@ -139,25 +101,25 @@ export class Game {
         return this.map.skybox.sampleColor(tx, ty);
     }
 
-    private drawMap(): void {
+    private drawMap(scene: MapScene): void {
 
         for (let x = 0; x < this.resolution.width; x++) {
 
-            const rayAngle = (this.cameraAngle - (this.config.fieldOfView / 2.0)) + (x / this.resolution.width) * this.config.fieldOfView;
+            const rayAngle = (scene.camera.angle - (this.config.fieldOfView / 2.0)) + (x / this.resolution.width) * this.config.fieldOfView;
             const rayDirection = new Vec2D(Math.cos(rayAngle), Math.sin(rayAngle));
 
             let rayLength = Infinity;
 
-            let hit = this.castRay(this.cameraPos, rayDirection);
+            let hit = this.castRay(scene.camera.position, rayDirection);
 
             if (hit) {
 
                 const ray = new Vec2D(
-                    hit.position.x - this.cameraPos.x,
-                    hit.position.y - this.cameraPos.y,
+                    hit.position.x - scene.camera.position.x,
+                    hit.position.y - scene.camera.position.y,
                 );
 
-                rayLength = ray.mag() * Math.cos(rayAngle - this.cameraAngle);
+                rayLength = ray.mag() * Math.cos(rayAngle - scene.camera.angle);
             }
 
             const fCeiling = (this.resolution.height / 2.0) - (this.resolution.height / rayLength);
@@ -169,7 +131,7 @@ export class Game {
                 if (y <= Math.trunc(fCeiling)) {
 
                     const planeZ = this.halfResolution.height / (this.halfResolution.height - y);
-                    const planePoint = VectorUtils.add(this.cameraPos, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - this.cameraAngle)));
+                    const planePoint = VectorUtils.add(scene.camera.position, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - scene.camera.angle)));
                     const tilePos = VectorUtils.int(planePoint);
                     const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
                     const tile = this.map.getTile(tilePos.y, tilePos.x);
@@ -178,7 +140,7 @@ export class Game {
                     if (tile?.texture && tile.texture[Side.TOP]) {
 
                         color = tile.texture[Side.TOP].sampleColor(tex.x, tex.y);
-                        color = Color.shade(color, this.ambientLight);
+                        color = Color.shade(color, scene.ambientLight);
                     }
 
                     if (!color) color = this.getSkyboxColor(rayAngle, y);
@@ -197,11 +159,11 @@ export class Game {
                     }
 
                     const ray = new Vec2D(
-                        hit!.position.x - this.cameraPos.x,
-                        hit!.position.y - this.cameraPos.y,
+                        hit!.position.x - scene.camera.position.x,
+                        hit!.position.y - scene.camera.position.y,
                     );
 
-                    color = Color.shade(color, this.ambientLight);
+                    color = Color.shade(color, scene.ambientLight);
 
                     if (color.a != 255) color = this.getSkyboxColor(rayAngle, y);
 
@@ -210,7 +172,7 @@ export class Game {
                 else {
 
                     const planeZ = this.halfResolution.height / (y - this.halfResolution.height);
-                    const planePoint = VectorUtils.add(this.cameraPos, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - this.cameraAngle)));
+                    const planePoint = VectorUtils.add(scene.camera.position, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - scene.camera.angle)));
                     const tilePos = VectorUtils.int(planePoint);
                     const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
                     const tile = this.map.getTile(tilePos.y, tilePos.x);
@@ -219,7 +181,7 @@ export class Game {
                     if (tile?.texture && tile.texture[Side.BOTTOM]) {
 
                         color = tile.texture[Side.BOTTOM].sampleColor(tex.x, tex.y);
-                        color = Color.shade(color, this.ambientLight);
+                        color = Color.shade(color, scene.ambientLight);
                     }
 
                     this.renderer.drawPixel(x, y, color);
@@ -230,12 +192,12 @@ export class Game {
         }
     }
 
-    private drawSprite(): void {
+    private drawSprites(scene: MapScene): void {
 
-        const object: Vec2D = VectorUtils.sub(this.spritePosition, this.cameraPos);
+        const object: Vec2D = VectorUtils.sub(this.spritePosition, scene.camera.position);
         const distanceToObject = object.mag();
 
-        let objectAngle = Math.atan2(object.y, object.x) - this.cameraAngle;
+        let objectAngle = Math.atan2(object.y, object.x) - scene.camera.angle;
         if (objectAngle < -3.14159) objectAngle += 2.0 * 3.14159;
         if (objectAngle > 3.14159) objectAngle -= 2.0 * 3.14159;
 
@@ -268,7 +230,7 @@ export class Game {
                     const sampleY = y / objectSize.height;
 
                     let color = this.sprite!.sampleColor(sampleX, sampleY);
-                    color = Color.shade(color, this.ambientLight);
+                    color = Color.shade(color, scene.ambientLight);
 
                     const screenPos = new Vec2D(
                         Math.trunc(objectTopLeft.x + x),

@@ -1,3 +1,4 @@
+import { Color } from "../core/Color";
 import { Size } from "../core/Size";
 
 export interface GameConfig {
@@ -16,4 +17,9 @@ export interface GameConfig {
      * Field of view in radians.
      */
     fieldOfView: number;
+
+    /**
+     * Default background color.
+     */
+    backgroundColor: Color;
 }
