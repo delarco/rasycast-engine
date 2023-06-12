@@ -8,16 +8,16 @@ import { Vec2D } from "./Vec2D";
 
 // Placeholder map
 const map = [
-    0, 1, 1, 0, 0, 2, 0, 0, 1, 1,
-    1, 0, 0, 0, 0, 2, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 2, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 2, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 0, 0, 0, 0, 1, 1, 1,
+    0, 3, 3, 3, 3, 0, 3, 3, 3, 0,
+    3, 0, 0, 0, 0, 2, 0, 0, 0, 3,
+    3, 0, 0, 0, 0, 2, 0, 0, 0, 3,
+    3, 0, 0, 0, 0, 4, 0, 0, 0, 3,
+    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
+    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
+    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
+    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
+    3, 0, 0, 0, 0, 0, 0, 0, 0, 3,
+    0, 5, 5, 5, 5, 5, 5, 5, 5, 0,
 ]
 
 export class Map {
@@ -43,6 +43,8 @@ export class Map {
         const west = await TextureUtils.loadTexture('textures/west.png')!;
         const east = await TextureUtils.loadTexture('textures/east.png')!;
         const banner = await TextureUtils.loadTexture('textures/banner.png')!;
+        const rocks = await TextureUtils.loadTexture('textures/rocks.png')!;
+        const window = await TextureUtils.loadTexture('textures/window.png')!;
 
         for (let y = 0; y < this.size.height; y++) {
             for (let x = 0; x < this.size.width; x++) {
@@ -54,16 +56,14 @@ export class Map {
                     num > 0,
                 );
 
-                if (num == 0) {
-                    tile.texture = {
-                        [Side.NORTH]: null,
-                        [Side.SOUTH]: null,
-                        [Side.WEST]: null,
-                        [Side.EAST]: null,
-                        [Side.TOP]: null,
-                        [Side.BOTTOM]: ground,
-                    };
-                }
+                tile.texture = {
+                    [Side.NORTH]: null,
+                    [Side.SOUTH]: null,
+                    [Side.WEST]: null,
+                    [Side.EAST]: null,
+                    [Side.TOP]: null,
+                    [Side.BOTTOM]: null,
+                };
 
                 if (num == 1) {
                     tile.texture = {
@@ -96,9 +96,44 @@ export class Map {
                     };
                 }
 
-                if (x == 1 && y == 1) {
-                    tile.texture![Side.TOP] = ground;
-                    tile.texture![Side.BOTTOM] = grass;
+                if (num == 3) {
+                    tile.texture = {
+                        [Side.NORTH]: ground,
+                        [Side.SOUTH]: ground,
+                        [Side.WEST]: ground,
+                        [Side.EAST]: ground,
+                        [Side.TOP]: null,
+                        [Side.BOTTOM]: null,
+                    };
+                }
+
+                if (num == 4) {
+                    tile.texture = {
+                        [Side.NORTH]: rocks,
+                        [Side.SOUTH]: rocks,
+                        [Side.WEST]: rocks,
+                        [Side.EAST]: rocks,
+                        [Side.TOP]: null,
+                        [Side.BOTTOM]: null,
+                    };
+                }
+
+                if (num == 5) {
+                    tile.texture = {
+                        [Side.NORTH]: window,
+                        [Side.SOUTH]: window,
+                        [Side.WEST]: window,
+                        [Side.EAST]: window,
+                        [Side.TOP]: null,
+                        [Side.BOTTOM]: null,
+                    };
+                }
+
+                tile.texture[Side.BOTTOM] = ground;
+
+                if (x == 1 && y <= 3) {
+                    tile.texture![Side.TOP] = grass;
+                    tile.texture![Side.BOTTOM] = rocks;
                 }
 
                 this.tiles.push(tile);
