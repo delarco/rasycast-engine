@@ -54,7 +54,7 @@ export class Game {
         this.imageData = this.context.getImageData(0, 0, this.resolution.width, this.resolution.height);
         this.colorBuffer = this.imageData.data;
         this.depthBuffer = [...new Array(this.resolution.width * this.resolution.height)].map(() => Infinity);
-        this.renderer = new Renderer(this.context, this.resolution, this.imageData, this.colorBuffer);
+        this.renderer = new Renderer(this.context, this.resolution, this.imageData, this.colorBuffer, this.depthBuffer);
 
         this.map = new Map('', new Size(10, 10));
     }
@@ -117,6 +117,9 @@ export class Game {
 
     private drawMap(): void {
 
+        const floorColor = new Color(200, 150, 150);
+        const ceilingColor = new Color(200, 200, 255);
+
         for (let x = 0; x < this.resolution.width; x++) {
 
             const rayAngle = (this.cameraAngle - (this.config.fieldOfView / 2.0)) + (x / this.resolution.width) * this.config.fieldOfView;
@@ -145,17 +148,17 @@ export class Game {
 
                 if (y <= Math.trunc(fCeiling)) {
 
-                    this.renderer.drawPixel(x, y, new Color(200, 200, 255));
+                    this.renderer.drawPixel(x, y, ceilingColor);
                 }
                 else if (y > Math.trunc(fCeiling) && y <= Math.trunc(fFloor)) {
 
                     let ty = (y - fCeiling) / fWallHeight;
                     let color = hit!.tile.wall![hit!.side!].sampleColor(hit!.tx!, ty);
-                    this.renderer.drawPixel(x, y, color);
+                    this.renderer.depthDrawPixel(x, y, rayLength, color);
                 }
                 else {
 
-                    this.renderer.drawPixel(x, y, new Color(200, 150, 150));
+                    this.renderer.drawPixel(x, y, floorColor);
                 }
             }
 
@@ -209,6 +212,7 @@ export class Game {
 
                     if (screenPos.x >= 0 && screenPos.x < this.resolution.width && screenPos.y >= 0 && screenPos.y < this.resolution.height && color.a == 255) {
 
+                        //this.renderer.depthDrawPixel(screenPos.x, screenPos.y, distanceToObject, color);
                         this.renderer.drawPixel(screenPos.x, screenPos.y, color);
                     }
                 }
