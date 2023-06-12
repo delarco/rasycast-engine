@@ -7,6 +7,8 @@ export enum KEYS {
     KEY_S = 'KeyS',
     KEY_D = 'KeyD',
     KEY_W = 'KeyW',
+    KEY_Q = 'KeyQ',
+    KEY_E = 'KeyE',
 }
 
 export class Keyboard {
