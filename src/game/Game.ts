@@ -32,7 +32,7 @@ export class Game {
     private spriteSize = new Size(0.2, 0.2);
     private keyboard = new Keyboard();
     private cameraVelocity = 2.2;
-    private ambientLight = 0.3;
+    private ambientLight = 0.9;
     private ambientLightVel = 0.005;
 
     public get domElement(): HTMLCanvasElement {
@@ -83,12 +83,12 @@ export class Game {
 
     private update(deltaTime: number): void {
 
-        this.ambientLight += this.ambientLightVel;
+        //this.ambientLight += this.ambientLightVel;
 
-        if(this.ambientLight >= 1 || this.ambientLight <= 0.2){
+        // if(this.ambientLight >= 1 || this.ambientLight <= 0.2){
 
-            this.ambientLightVel *= -1;
-        }
+        //     this.ambientLightVel *= -1;
+        // }
 
         this.updateCamera(deltaTime);
         this.drawMap();
@@ -152,6 +152,14 @@ export class Game {
         return angle;
     }
 
+    private getSkyboxColor(rayAngle: number, x: number, y: number): Color {
+
+        let tx = rayAngle * (1 / (2 * Math.PI)) % 1;
+        if (tx < 0) tx = 1 + tx;
+        const ty = y / (this.halfResolution.height - 1);
+        return this.map.skybox.sampleColor(tx, ty);
+    }
+
     private drawMap(): void {
 
         for (let x = 0; x < this.resolution.width; x++) {
@@ -194,15 +202,7 @@ export class Game {
                         color = Color.shade(color, this.ambientLight);
                     }
 
-                    if (!color) {
-
-                        let tx = rayAngle * (1 / (2 * Math.PI)) % 1;
-                        if (tx < 0) tx = 1 + tx;
-                        const ty = y / (this.halfResolution.height - 1);
-                        color = this.map.skybox.sampleColor(tx, ty);
-                    }
-
-                    //if (!color) color = ceilingColor;
+                    if (!color) color = this.getSkyboxColor(rayAngle, x, y);
 
                     this.renderer.drawPixel(x, y, color);
                 }
@@ -223,6 +223,8 @@ export class Game {
                     );
 
                     color = Color.shade(color, this.ambientLight);
+
+                    if (color.a != 255) color = this.getSkyboxColor(rayAngle, x, y);
 
                     this.renderer.depthDrawPixel(x, y, ray.mag(), color);
                 }
