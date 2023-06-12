@@ -11,7 +11,7 @@ export class TextureUtils {
 
     public static makeTestTexture(name: string, width: number, height: number): Texture {
 
-        const texture = new Texture(name, width, height);        
+        const texture = new Texture(name, width, height);
 
         for (let y = 0; y < height; y++) {
 
@@ -120,5 +120,34 @@ export class TextureUtils {
                     });
             }
         );
+    }
+
+    public static drawDebugBorders(texture: Texture): void {
+
+        for (let y = 0; y < texture.height; y++) {
+            for (let x = 0; x < texture.width; x++) {
+
+                const index = y * texture.width + x;
+
+                if (x == 0 && y != 0) texture.data[index] = Color.RED;
+
+                if (y == 0 && x != 0) texture.data[index] = Color.GREEN;
+
+                if (x == texture.width - 1 && y != 0) texture.data[index] = Color.BLUE;
+
+                if (y == texture.height - 1 && x != 0) texture.data[index] = Color.ORANGE;
+
+                if (
+                    (x == 0 && y == 0)
+                    || (x == texture.width - 1 && y == 0)
+                    || (x == 0 && y == texture.height - 1)
+                    || (x == texture.width - 1 && y == texture.height - 1)
+                    || (x == y)
+                    || (x == 2 && y == 1)
+                    || (x == 1 && y == 2)
+                ) texture.data[index] = Color.BLACK;
+
+            }
+        }
     }
 }
