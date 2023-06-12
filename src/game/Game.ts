@@ -306,20 +306,20 @@ export class Game {
                         hit.side = Side.EAST;
                         intersection.y = m * ((mapCheck.x + 1) - origin.x) + origin.y;
                         intersection.x = mapCheck.x + 1;
-                        hit.tx = intersection.y - Math.floor(intersection.y);
+                        hit.tx = 1.0 - (intersection.y - Math.floor(intersection.y));
                     }
                     else {
                         hit.side = Side.NORTH;
                         intersection.y = mapCheck.y;
                         intersection.x = (mapCheck.y - origin.y) / m + origin.x;
-                        hit.tx = intersection.x - Math.floor(intersection.x);
+                        hit.tx = 1.0 - (intersection.x - Math.floor(intersection.x));
                     }
 
                     if (intersection.y < mapCheck.y) {
                         hit.side = Side.NORTH;
                         intersection.y = mapCheck.y;
                         intersection.x = (mapCheck.y - origin.y) / m + origin.x;
-                        hit.tx = intersection.x - Math.floor(intersection.x);
+                        hit.tx = 1.0 - (intersection.x - Math.floor(intersection.x));
                     }
                 }
                 else if (origin.y >= mapCheck.y + 1) {
@@ -333,7 +333,7 @@ export class Game {
                         hit.side = Side.EAST;
                         intersection.y = m * ((mapCheck.x + 1) - origin.x) + origin.y;
                         intersection.x = mapCheck.x + 1;
-                        hit.tx = intersection.y - Math.floor(intersection.y);
+                        hit.tx = 1.0 - (intersection.y - Math.floor(intersection.y));
                     }
                     else {
                         hit.side = Side.SOUTH;
@@ -360,7 +360,7 @@ export class Game {
                         hit.side = Side.EAST;
                         intersection.y = m * ((mapCheck.x + 1) - origin.x) + origin.y;
                         intersection.x = mapCheck.x + 1;
-                        hit.tx = intersection.y - Math.floor(intersection.y);
+                        hit.tx = 1.0 - (intersection.y - Math.floor(intersection.y));
                     }
                 }
 
