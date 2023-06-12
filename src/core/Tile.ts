@@ -8,5 +8,6 @@ export class Tile {
         public position: Vec2D,
         public solid: boolean,
         public wall?: { [key in Side]: Texture } | null,
+        public detail?: { [key in Side]: Texture } | null,
     ) { }
 }
