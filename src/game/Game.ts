@@ -33,7 +33,6 @@ export class Game {
     private keyboard = new Keyboard();
     private cameraVelocity = 2.2;
     private ambientLight = 0.9;
-    private ambientLightVel = 0.005;
 
     public get domElement(): HTMLCanvasElement {
         return this.canvas;
@@ -82,13 +81,6 @@ export class Game {
     }
 
     private update(deltaTime: number): void {
-
-        //this.ambientLight += this.ambientLightVel;
-
-        // if(this.ambientLight >= 1 || this.ambientLight <= 0.2){
-
-        //     this.ambientLightVel *= -1;
-        // }
 
         this.updateCamera(deltaTime);
         this.drawMap();
@@ -139,20 +131,7 @@ export class Game {
         }
     }
 
-    public rad60 = Math.PI / 3;
-    public rad90 = Math.PI / 2;
-    public rad180 = Math.PI;
-    public rad270 = Math.PI * 3 / 2;
-    public rad360 = Math.PI * 2;
-
-    public fixAngle(angle: number): number {
-
-        if (angle < 0) return this.rad360 + angle;
-        if (angle > this.rad360) return angle - this.rad360;
-        return angle;
-    }
-
-    private getSkyboxColor(rayAngle: number, x: number, y: number): Color {
+    private getSkyboxColor(rayAngle: number, y: number): Color {
 
         let tx = rayAngle * (1 / (2 * Math.PI)) % 1;
         if (tx < 0) tx = 1 + tx;
@@ -202,7 +181,7 @@ export class Game {
                         color = Color.shade(color, this.ambientLight);
                     }
 
-                    if (!color) color = this.getSkyboxColor(rayAngle, x, y);
+                    if (!color) color = this.getSkyboxColor(rayAngle, y);
 
                     this.renderer.drawPixel(x, y, color);
                 }
@@ -224,7 +203,7 @@ export class Game {
 
                     color = Color.shade(color, this.ambientLight);
 
-                    if (color.a != 255) color = this.getSkyboxColor(rayAngle, x, y);
+                    if (color.a != 255) color = this.getSkyboxColor(rayAngle, y);
 
                     this.renderer.depthDrawPixel(x, y, ray.mag(), color);
                 }
