@@ -29,7 +29,8 @@ export class Map {
 
         this.tiles = new Array<Tile>();
 
-        const wall = await TextureUtils.loadTexture('textures/ground-01.png')!;
+        const ground = await TextureUtils.loadTexture('textures/ground-01.png')!;
+        const grass = await TextureUtils.loadTexture('textures/grass-01.png')!;
         const test = await TextureUtils.loadTexture('textures/debug.png')!;
         const north = await TextureUtils.loadTexture('textures/north.png')!;
         const south = await TextureUtils.loadTexture('textures/south.png')!;
@@ -47,21 +48,36 @@ export class Map {
                     num > 0,
                 );
 
+                if (num == 0) {
+                    tile.texture = {
+                        [Side.NORTH]: null,
+                        [Side.SOUTH]: null,
+                        [Side.WEST]: null,
+                        [Side.EAST]: null,
+                        [Side.TOP]: null,
+                        [Side.BOTTOM]: ground,
+                    };
+                }
+
                 if (num == 1) {
-                    tile.wall = {
+                    tile.texture = {
                         [Side.NORTH]: north,
                         [Side.SOUTH]: south,
                         [Side.WEST]: west,
                         [Side.EAST]: east,
+                        [Side.TOP]: null,
+                        [Side.BOTTOM]: null,
                     };
                 }
 
                 if(num == 2) {
-                    tile.wall = {
+                    tile.texture = {
                         [Side.NORTH]: test,
                         [Side.SOUTH]: test,
                         [Side.WEST]: test,
                         [Side.EAST]: test,
+                        [Side.TOP]: null,
+                        [Side.BOTTOM]: null,
                     };
 
                     tile.detail = {
@@ -69,11 +85,21 @@ export class Map {
                         [Side.SOUTH]: banner,
                         [Side.WEST]: banner,
                         [Side.EAST]: banner,
+                        [Side.TOP]: null,
+                        [Side.BOTTOM]: null,
                     };
+                }
+
+                if(x == 1 && y == 1) {
+                    tile.texture![Side.TOP] = ground;
+                    tile.texture![Side.BOTTOM] = grass;
                 }
 
                 this.tiles.push(tile);
             }
         }
+
+        console.log(this);
+        
     }
 }

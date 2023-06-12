@@ -157,23 +157,28 @@ export class Game {
             const fCeiling = (this.resolution.height / 2.0) - (this.resolution.height / rayLength);
             const fFloor = this.resolution.height - fCeiling;
             const fWallHeight = fFloor - fCeiling;
-            const fFloorHeight = this.resolution.height - fFloor;
 
             for (let y = 0; y < this.resolution.height; y++) {
 
                 if (y <= Math.trunc(fCeiling)) {
 
-                    this.renderer.drawPixel(x, y, ceilingColor);
+                    const planeZ = this.halfResolution.height / (this.halfResolution.height - y);
+                    const planePoint = VectorUtils.add(this.cameraPos, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - this.cameraAngle)));
+                    const tilePos = VectorUtils.int(planePoint);
+                    const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
+                    const tile = this.map.tiles[tilePos.y * this.map.size.width + tilePos.x];
+                    const color = tile.texture![Side.TOP]?.sampleColor(tex.x, tex.y);
+                    this.renderer.drawPixel(x, y, color || ceilingColor);
                 }
                 else if (y > Math.trunc(fCeiling) && y <= Math.trunc(fFloor)) {
 
                     let ty = (y - fCeiling) / fWallHeight;
-                    let color = hit!.tile.wall![hit!.side!].sampleColor(hit!.tx!, ty);
-                    
-                    if(hit!.tile.detail) {
-                        const detailColor = hit!.tile.detail![hit!.side!].sampleColor(hit!.tx!, ty);
+                    let color = hit!.tile!.texture![hit!.side!]!.sampleColor(hit!.tx!, ty);
 
-                        if(detailColor.a == 255) color = detailColor;
+                    if (hit!.tile.detail) {
+
+                        const detailColor = hit!.tile.detail![hit!.side!]!.sampleColor(hit!.tx!, ty);
+                        if (detailColor.a == 255) color = detailColor;
                     }
 
                     const ray = new Vec2D(
@@ -185,7 +190,13 @@ export class Game {
                 }
                 else {
 
-                    this.renderer.drawPixel(x, y, floorColor);
+                    const planeZ = this.halfResolution.height / (y - this.halfResolution.height);
+                    const planePoint = VectorUtils.add(this.cameraPos, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - this.cameraAngle)));
+                    const tilePos = VectorUtils.int(planePoint);
+                    const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
+                    const tile = this.map.tiles[tilePos.y * this.map.size.width + tilePos.x];
+                    const color = tile.texture![Side.BOTTOM]?.sampleColor(tex.x, tex.y);
+                    this.renderer.drawPixel(x, y, color || floorColor);
                 }
             }
 

@@ -3,4 +3,6 @@ export enum Side {
     SOUTH,
     WEST,
     EAST,
+    TOP,
+    BOTTOM,
 }

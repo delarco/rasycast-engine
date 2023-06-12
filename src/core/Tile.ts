@@ -7,7 +7,7 @@ export class Tile {
     constructor(
         public position: Vec2D,
         public solid: boolean,
-        public wall?: { [key in Side]: Texture } | null,
-        public detail?: { [key in Side]: Texture } | null,
+        public texture?: { [key in Side]: Texture | null } | null,
+        public detail?: { [key in Side]: Texture | null } | null,
     ) { }
 }
