@@ -130,6 +130,19 @@ export class Game {
         }
     }
 
+    public rad60 = Math.PI / 3;
+    public rad90 = Math.PI / 2;
+    public rad180 = Math.PI;
+    public rad270 = Math.PI * 3 / 2;
+    public rad360 = Math.PI * 2;
+
+    public fixAngle(angle: number): number {
+
+        if (angle < 0) return this.rad360 + angle;
+        if (angle > this.rad360) return angle - this.rad360;
+        return angle;
+    }
+
     private drawMap(): void {
 
         const floorColor = new Color(200, 150, 150);
@@ -167,12 +180,22 @@ export class Game {
                     const tilePos = VectorUtils.int(planePoint);
                     const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
                     const tile = this.map.getTile(tilePos.y, tilePos.x);
-                    let color = ceilingColor;
+                    let color: Color | null = null;
 
-                    if(tile?.texture && tile.texture[Side.TOP]) {
+                    if (tile?.texture && tile.texture[Side.TOP]) {
 
                         color = tile.texture[Side.TOP].sampleColor(tex.x, tex.y);
                     }
+
+                    if (!color && this.map.skybox) {
+
+                        let tx = rayAngle * (1 / (2 * Math.PI)) % 1;
+                        if (tx < 0) tx = 1 + tx;
+                        const ty = y / (this.halfResolution.height - 1);
+                        color = this.map.skybox.sampleColor(tx, ty);
+                    }
+
+                    if (!color) color = ceilingColor;
 
                     this.renderer.drawPixel(x, y, color);
                 }
@@ -203,7 +226,7 @@ export class Game {
                     const tile = this.map.getTile(tilePos.y, tilePos.x);
                     let color = floorColor;
 
-                    if(tile?.texture && tile.texture[Side.BOTTOM]) {
+                    if (tile?.texture && tile.texture[Side.BOTTOM]) {
 
                         color = tile.texture[Side.BOTTOM].sampleColor(tex.x, tex.y);
                     }

@@ -1,6 +1,8 @@
 import { TextureUtils } from "../utils/Texture.utils";
+import { Color } from "./Color";
 import { Side } from "./Side";
 import { Size } from "./Size";
+import { Texture } from "./Texture";
 import { Tile } from "./Tile";
 import { Vec2D } from "./Vec2D";
 
@@ -23,12 +25,14 @@ export class Map {
     constructor(
         public name: string,
         public size: Size,
-        public tiles: Array<Tile> = []) { }
+        public tiles: Array<Tile> = [],
+        public skybox: Texture = new Texture('', 1, 1, [Color.BLUE])) { }
 
     public async load(): Promise<void> {
 
         this.tiles = new Array<Tile>();
-
+        this.skybox = await TextureUtils.loadTexture('textures/skybox-night.png')!;
+        
         const ground = await TextureUtils.loadTexture('textures/ground-01.png')!;
         const grass = await TextureUtils.loadTexture('textures/grass-01.png')!;
         const test = await TextureUtils.loadTexture('textures/debug.png')!;
