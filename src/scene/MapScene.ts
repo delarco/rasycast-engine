@@ -27,7 +27,7 @@ export class MapScene implements Scene {
 
     public initialize(): void { }
 
-    public update(deltaTime: number): void { }
+    public update(deltaTime: number, updateEntities: boolean): void { }
 
     public dispose(): void { }
 }

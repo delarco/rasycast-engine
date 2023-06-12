@@ -3,13 +3,12 @@ import { Color } from "../core/Color";
 import { Map } from "../core/Map";
 import { Side } from "../core/Side";
 import { Size } from "../core/Size";
-import { Texture } from "../core/Texture";
+import { Sprite } from "../core/Sprite";
 import { TileHit } from "../core/TileHit";
 import { Vec2D } from "../core/Vec2D";
 import { Renderer } from "../renderer/Renderer";
 import { MapScene } from "../scene/MapScene";
 import { Scene } from "../scene/Scene";
-import { TextureUtils } from "../utils/Texture.utils";
 import { VectorUtils } from "../utils/Vector.utils";
 import { GameConfig } from "./GameConfig";
 
@@ -24,11 +23,6 @@ export class Game {
     private depthBuffer: Array<number>;
     private renderer: Renderer;
     private clock = new Clock();
-    private map: Map;
-    private sprite: Texture | null = null;
-    private spritePosition = new Vec2D(1.5, 1.5);
-    private spriteSize = new Size(0.2, 0.2);
-
     private scenes: Array<Scene> = [];
 
     public get domElement(): HTMLCanvasElement {
@@ -53,8 +47,6 @@ export class Game {
         this.colorBuffer = this.imageData.data;
         this.depthBuffer = [...new Array(this.resolution.width * this.resolution.height)].map(() => Infinity);
         this.renderer = new Renderer(this.context, this.resolution, this.imageData, this.colorBuffer, this.depthBuffer);
-
-        this.map = new Map('', new Size(10, 10));
     }
 
     public addScene(scene: Scene) {
@@ -64,8 +56,8 @@ export class Game {
 
     public async run(): Promise<void> {
 
-        await this.map.load();
-        this.sprite = await TextureUtils.loadTexture('sprites/key.png');
+        for (let scene of this.scenes) await scene.preload();
+        for (let scene of this.scenes) scene.initialize();
 
         const mainLoop = (timeStamp: number) => {
 
@@ -74,11 +66,11 @@ export class Game {
 
             this.renderer.clear(this.config.backgroundColor);
 
-            for (let scene of this.scenes) {
+            for (let scene of this.scenes) {                
 
-                scene.update(this.clock.deltaTime);
-                
-                if(scene instanceof MapScene) {
+                scene.update(this.clock.deltaTime, this.clock.updateEntities);
+
+                if (scene instanceof MapScene) {
 
                     this.drawMap(scene);
                     this.drawSprites(scene);
@@ -93,12 +85,12 @@ export class Game {
         requestAnimationFrame(mainLoop);
     }
 
-    private getSkyboxColor(rayAngle: number, y: number): Color {
+    private getSkyboxColor(scene: MapScene, rayAngle: number, y: number): Color {
 
         let tx = rayAngle * (1 / (2 * Math.PI)) % 1;
         if (tx < 0) tx = 1 + tx;
         const ty = y / (this.resolution.height - 1);
-        return this.map.skybox.sampleColor(tx, ty);
+        return scene.map!.skybox.sampleColor(tx, ty);
     }
 
     private drawMap(scene: MapScene): void {
@@ -110,7 +102,7 @@ export class Game {
 
             let rayLength = Infinity;
 
-            let hit = this.castRay(scene.camera.position, rayDirection);
+            let hit = this.castRay(scene, scene.camera.position, rayDirection);
 
             if (hit) {
 
@@ -134,7 +126,7 @@ export class Game {
                     const planePoint = VectorUtils.add(scene.camera.position, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - scene.camera.angle)));
                     const tilePos = VectorUtils.int(planePoint);
                     const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
-                    const tile = this.map.getTile(tilePos.y, tilePos.x);
+                    const tile = scene.map!.getTile(tilePos.y, tilePos.x);
                     let color: Color | null = null;
 
                     if (tile?.texture && tile.texture[Side.TOP]) {
@@ -143,7 +135,7 @@ export class Game {
                         color = Color.shade(color, scene.ambientLight);
                     }
 
-                    if (!color) color = this.getSkyboxColor(rayAngle, y);
+                    if (!color) color = this.getSkyboxColor(scene, rayAngle, y);
 
                     this.renderer.drawPixel(x, y, color);
                 }
@@ -165,7 +157,7 @@ export class Game {
 
                     color = Color.shade(color, scene.ambientLight);
 
-                    if (color.a != 255) color = this.getSkyboxColor(rayAngle, y);
+                    if (color.a != 255) color = this.getSkyboxColor(scene, rayAngle, y);
 
                     this.renderer.depthDrawPixel(x, y, ray.mag(), color);
                 }
@@ -175,8 +167,8 @@ export class Game {
                     const planePoint = VectorUtils.add(scene.camera.position, VectorUtils.mul(rayDirection, planeZ * 2.0 / Math.cos(rayAngle - scene.camera.angle)));
                     const tilePos = VectorUtils.int(planePoint);
                     const tex = new Vec2D(planePoint.x - tilePos.x, planePoint.y - tilePos.y);
-                    const tile = this.map.getTile(tilePos.y, tilePos.x);
-                    let color = this.map.defaultFloor.sampleColor(tex.x, tex.y);
+                    const tile = scene.map!.getTile(tilePos.y, tilePos.x);
+                    let color = scene.map!.defaultFloor.sampleColor(tex.x, tex.y);
 
                     if (tile?.texture && tile.texture[Side.BOTTOM]) {
 
@@ -194,68 +186,72 @@ export class Game {
 
     private drawSprites(scene: MapScene): void {
 
-        const object: Vec2D = VectorUtils.sub(this.spritePosition, scene.camera.position);
-        const distanceToObject = object.mag();
+        for (let sprite of scene.objects) {
 
-        let objectAngle = Math.atan2(object.y, object.x) - scene.camera.angle;
-        if (objectAngle < -3.14159) objectAngle += 2.0 * 3.14159;
-        if (objectAngle > 3.14159) objectAngle -= 2.0 * 3.14159;
+            if (!sprite.visible || !(sprite instanceof Sprite)) continue;
 
-        const inPlayerFOV = Math.abs(objectAngle) < (this.config.fieldOfView + (1.0 / distanceToObject)) / 2.0;
+            const object: Vec2D = VectorUtils.sub(sprite.position, scene.camera.position);
+            const distanceToObject = object.mag();
 
-        if (inPlayerFOV && distanceToObject >= 0.5) {
+            let objectAngle = Math.atan2(object.y, object.x) - scene.camera.angle;
+            if (objectAngle < -3.14159) objectAngle += 2.0 * 3.14159;
+            if (objectAngle > 3.14159) objectAngle -= 2.0 * 3.14159;
 
-            const floorPoint = new Vec2D(
-                (0.5 * ((objectAngle / (this.config.fieldOfView * 0.5))) + 0.5) * this.resolution.width,
-                (this.resolution.height / 2.0) + (this.resolution.height / distanceToObject) / Math.cos(objectAngle / 2.0)
-            );
+            const inPlayerFOV = Math.abs(objectAngle) < (this.config.fieldOfView + (1.0 / distanceToObject)) / 2.0;
 
-            const objectSize = new Size(this.spriteSize.width, this.spriteSize.height);
+            if (inPlayerFOV && distanceToObject >= 0.5) {
 
-            objectSize.width *= 2.0 * this.resolution.height;
-            objectSize.height *= 2.0 * this.resolution.height;
+                const floorPoint = new Vec2D(
+                    (0.5 * ((objectAngle / (this.config.fieldOfView * 0.5))) + 0.5) * this.resolution.width,
+                    (this.resolution.height / 2.0) + (this.resolution.height / distanceToObject) / Math.cos(objectAngle / 2.0)
+                );
 
-            objectSize.width /= distanceToObject;
-            objectSize.height /= distanceToObject;
+                const objectSize = new Size(sprite.size.width, sprite.size.height);
 
-            const objectTopLeft = new Vec2D(
-                floorPoint.x - objectSize.width / 2.0,
-                floorPoint.y - objectSize.height
-            );
+                objectSize.width *= 2.0 * this.resolution.height;
+                objectSize.height *= 2.0 * this.resolution.height;
 
-            for (let y = 0; y < objectSize.height; y++) {
-                for (let x = 0; x < objectSize.width; x++) {
+                objectSize.width /= distanceToObject;
+                objectSize.height /= distanceToObject;
 
-                    const sampleX = x / objectSize.width;
-                    const sampleY = y / objectSize.height;
+                const objectTopLeft = new Vec2D(
+                    floorPoint.x - objectSize.width / 2.0,
+                    floorPoint.y - objectSize.height
+                );
 
-                    let color = this.sprite!.sampleColor(sampleX, sampleY);
-                    color = Color.shade(color, scene.ambientLight);
+                for (let y = 0; y < objectSize.height; y++) {
+                    for (let x = 0; x < objectSize.width; x++) {
 
-                    const screenPos = new Vec2D(
-                        Math.trunc(objectTopLeft.x + x),
-                        Math.trunc(objectTopLeft.y + y)
-                    );
+                        const sampleX = x / objectSize.width;
+                        const sampleY = y / objectSize.height;
 
-                    if (screenPos.x >= 0 && screenPos.x < this.resolution.width && screenPos.y >= 0 && screenPos.y < this.resolution.height && color.a == 255) {
+                        let color = sprite.sampleColor(sampleX, sampleY);
+                        color = Color.shade(color, scene.ambientLight);
 
-                        this.renderer.depthDrawPixel(screenPos.x, screenPos.y, distanceToObject, color);
+                        const screenPos = new Vec2D(
+                            Math.trunc(objectTopLeft.x + x),
+                            Math.trunc(objectTopLeft.y + y)
+                        );
+
+                        if (screenPos.x >= 0 && screenPos.x < this.resolution.width && screenPos.y >= 0 && screenPos.y < this.resolution.height && color.a == 255) {
+
+                            this.renderer.depthDrawPixel(screenPos.x, screenPos.y, distanceToObject, color);
+                        }
                     }
                 }
             }
         }
-
     }
 
-    private isLocationSolid(x: number, y: number): boolean {
+    private isLocationSolid(map: Map, x: number, y: number): boolean {
 
         if (x < 0 || y < 0) return false;
-        if (x >= this.map.size.width || y >= this.map.size.height) return false;
+        if (x >= map.size.width || y >= map.size.height) return false;
 
-        return this.map.tiles[y * this.map.size.width + x].solid;
+        return map.tiles[y * map.size.width + x].solid;
     }
 
-    private castRay(origin: Vec2D, direction: Vec2D): TileHit | null {
+    private castRay(scene: MapScene, origin: Vec2D, direction: Vec2D): TileHit | null {
 
         let hit: TileHit | null = null;
 
@@ -309,12 +305,12 @@ export class Game {
 
             distance = rayDist.mag();
 
-            if (this.isLocationSolid(mapCheck.x, mapCheck.y)) {
+            if (this.isLocationSolid(scene.map!, mapCheck.x, mapCheck.y)) {
                 [hitTile.x, hitTile.y] = [mapCheck.x, mapCheck.y];
                 tileFound = true;
 
                 hit = {
-                    tile: this.map.tiles[mapCheck.y * this.map.size.width + mapCheck.x],
+                    tile: scene.map!.tiles[mapCheck.y * scene.map!.size.width + mapCheck.x],
                     side: null,
                     position: new Vec2D(),
                     tx: null,
