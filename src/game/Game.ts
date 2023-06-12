@@ -169,6 +169,12 @@ export class Game {
 
                     let ty = (y - fCeiling) / fWallHeight;
                     let color = hit!.tile.wall![hit!.side!].sampleColor(hit!.tx!, ty);
+                    
+                    if(hit!.tile.detail) {
+                        const detailColor = hit!.tile.detail![hit!.side!].sampleColor(hit!.tx!, ty);
+
+                        if(detailColor.a == 255) color = detailColor;
+                    }
 
                     const ray = new Vec2D(
                         hit!.position.x - this.cameraPos.x,

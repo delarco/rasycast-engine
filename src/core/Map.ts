@@ -35,6 +35,7 @@ export class Map {
         const south = await TextureUtils.loadTexture('textures/south.png')!;
         const west = await TextureUtils.loadTexture('textures/west.png')!;
         const east = await TextureUtils.loadTexture('textures/east.png')!;
+        const banner = await TextureUtils.loadTexture('textures/banner.png')!;
 
         for (let y = 0; y < this.size.height; y++) {
             for (let x = 0; x < this.size.width; x++) {
@@ -61,6 +62,13 @@ export class Map {
                         [Side.SOUTH]: test,
                         [Side.WEST]: test,
                         [Side.EAST]: test,
+                    };
+
+                    tile.detail = {
+                        [Side.NORTH]: banner,
+                        [Side.SOUTH]: banner,
+                        [Side.WEST]: banner,
+                        [Side.EAST]: banner,
                     };
                 }
 
