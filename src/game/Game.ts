@@ -134,8 +134,8 @@ export class Game {
 
                     if (hit!.tile.detail) {
 
-                        const detailColor = hit!.tile.detail![hit!.side!]!.sampleColor(hit!.tx!, ty);
-                        if (detailColor.a == 255) color = detailColor;
+                        const detailColor = hit!.tile.detail![hit!.side!]?.sampleColor(hit!.tx!, ty);
+                        if (detailColor?.a == 255) color = detailColor;
                     }
 
                     const ray = new Vec2D(
