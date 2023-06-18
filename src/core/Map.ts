@@ -8,16 +8,16 @@ import { Vec2D } from "./Vec2D";
 
 // Placeholder map
 const map = [
-    0, 5, 6, 6, 6, 0, 6, 6, 5, 0,
-    5, 0, 0, 0, 0, 2, 0, 0, 0, 5,
-    6, 0, 0, 0, 0, 2, 0, 0, 0, 6,
-    6, 0, 0, 0, 0, 4, 0, 0, 0, 6,
+    6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
     6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
     6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
     6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
     6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
-    5, 0, 0, 0, 0, 0, 0, 0, 0, 5,
-    0, 5, 6, 6, 6, 6, 6, 6, 5, 0,
+    6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
+    6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
+    6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
+    6, 0, 0, 0, 0, 0, 0, 0, 0, 6,
+    6, 6, 6, 6, 7, 6, 6, 6, 6, 6,
 ]
 
 export class Map {
@@ -46,6 +46,11 @@ export class Map {
         const rocks = await TextureUtils.loadTexture('textures/rocks.png')!;
         const window = await TextureUtils.loadTexture('textures/window.png')!;
         const windowBig = await TextureUtils.loadTexture('textures/window-big.png')!;
+        const wall = await TextureUtils.loadTexture('textures/wall-0.png')!;
+        const wallWindow = await TextureUtils.loadTexture('textures/wall-0-window.png')!;
+        const floor = await TextureUtils.loadTexture('textures/floor.jpg')!;
+        const ceiling = await TextureUtils.loadTexture('textures/ceiling-0.png')!;
+        //const lightSwitch = await TextureUtils.loadTexture('textures/light-switch.png')!;
 
         for (let y = 0; y < this.size.height; y++) {
             for (let x = 0; x < this.size.width; x++) {
@@ -62,8 +67,8 @@ export class Map {
                     [Side.SOUTH]: null,
                     [Side.WEST]: null,
                     [Side.EAST]: null,
-                    [Side.TOP]: null,
-                    [Side.BOTTOM]: null,
+                    [Side.TOP]: ceiling,
+                    [Side.BOTTOM]: floor,
                 };
 
                 if (num == 1) {
@@ -72,8 +77,8 @@ export class Map {
                         [Side.SOUTH]: south,
                         [Side.WEST]: west,
                         [Side.EAST]: east,
-                        [Side.TOP]: null,
-                        [Side.BOTTOM]: null,
+                        [Side.TOP]: ceiling,
+                        [Side.BOTTOM]: floor,
                     };
                 }
 
@@ -83,8 +88,8 @@ export class Map {
                         [Side.SOUTH]: test,
                         [Side.WEST]: test,
                         [Side.EAST]: test,
-                        [Side.TOP]: null,
-                        [Side.BOTTOM]: null,
+                        [Side.TOP]: ceiling,
+                        [Side.BOTTOM]: floor,
                     };
 
                     tile.detail = {
@@ -92,8 +97,8 @@ export class Map {
                         [Side.SOUTH]: banner,
                         [Side.WEST]: banner,
                         [Side.EAST]: banner,
-                        [Side.TOP]: null,
-                        [Side.BOTTOM]: null,
+                        [Side.TOP]: ceiling,
+                        [Side.BOTTOM]: floor,
                     };
                 }
 
@@ -103,8 +108,8 @@ export class Map {
                         [Side.SOUTH]: ground,
                         [Side.WEST]: ground,
                         [Side.EAST]: ground,
-                        [Side.TOP]: null,
-                        [Side.BOTTOM]: null,
+                        [Side.TOP]: ceiling,
+                        [Side.BOTTOM]: floor,
                     };
                 }
 
@@ -114,8 +119,8 @@ export class Map {
                         [Side.SOUTH]: rocks,
                         [Side.WEST]: rocks,
                         [Side.EAST]: rocks,
-                        [Side.TOP]: null,
-                        [Side.BOTTOM]: null,
+                        [Side.TOP]: ceiling,
+                        [Side.BOTTOM]: floor,
                     };
                 }
 
@@ -125,32 +130,48 @@ export class Map {
                         [Side.SOUTH]: window,
                         [Side.WEST]: window,
                         [Side.EAST]: window,
-                        [Side.TOP]: null,
-                        [Side.BOTTOM]: null,
+                        [Side.TOP]: ceiling,
+                        [Side.BOTTOM]: floor,
                     };
                 }
 
                 if (num == 6) {
                     tile.texture = {
-                        [Side.NORTH]: windowBig,
-                        [Side.SOUTH]: windowBig,
-                        [Side.WEST]: windowBig,
-                        [Side.EAST]: windowBig,
-                        [Side.TOP]: null,
-                        [Side.BOTTOM]: null,
+                        [Side.NORTH]: wall,
+                        [Side.SOUTH]: wall,
+                        [Side.WEST]: wall,
+                        [Side.EAST]: wall,
+                        [Side.TOP]: ceiling,
+                        [Side.BOTTOM]: floor,
+                    };
+                }
+                if (num == 7) {
+                    tile.texture = {
+                        [Side.NORTH]: wallWindow,
+                        [Side.SOUTH]: wallWindow,
+                        [Side.WEST]: wallWindow,
+                        [Side.EAST]: wallWindow,
+                        [Side.TOP]: ceiling,
+                        [Side.BOTTOM]: floor,
                     };
                 }
 
-                tile.texture[Side.BOTTOM] = ground;
+                //tile.texture[Side.BOTTOM] = ground;
 
-                if (x == 1 && y <= 3) {
-                    tile.texture![Side.TOP] = grass;
-                    tile.texture![Side.BOTTOM] = rocks;
+                //if (x == 1 && y <= 3) {
+                    //tile.texture![Side.TOP] = grass;
+                    //tile.texture![Side.BOTTOM] = rocks;
+                //}
+
+                if(x == 3 && y == 9) {
+
+                    tile.detail![Side.NORTH] = await TextureUtils.loadTexture('textures/light-switch-off.png')!;
                 }
 
                 this.tiles.push(tile);
             }
         }
+
     }
 
     public getTile(x: number, y: number): Tile | null {

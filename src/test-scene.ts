@@ -63,8 +63,7 @@ export class TestScene extends MapScene {
             new Size(32, 32),
             5);
 
-        this.objects.push(keySprite);
-        this.objects.push(campFireSprite);
+        this.ambientLight = 1;       
     }
 
     public update(deltaTime: number, updateEntities: boolean): void {
