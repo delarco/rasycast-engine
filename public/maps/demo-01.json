@@ -1,0 +1,34 @@
+{
+    "name": "Room",
+    "size": {
+        "width": 10,
+        "height": 10
+    },
+    "skybox": "skybox-night.png",
+    "defaultFloor": null,
+    "tiles": [
+        {
+            "position": {
+                "x": 0,
+                "y": 0
+            },
+            "solid": true,
+            "texture": {
+                "NORTH": null,
+                "SOUTH": null,
+                "WEST": null,
+                "EAST": null,
+                "TOP": null,
+                "BOTTOM": null
+            },
+            "detail": {
+                "NORTH": null,
+                "SOUTH": null,
+                "WEST": null,
+                "EAST": null,
+                "TOP": null,
+                "BOTTOM": null
+            }
+        }
+    ]
+}
